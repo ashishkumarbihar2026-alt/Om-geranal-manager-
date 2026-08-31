@@ -6,7 +6,7 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, onSnapshot } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 
 const AuthContext = createContext(null)
@@ -17,17 +17,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    let unsubProfile = () => {}
+    const unsub = onAuthStateChanged(auth, (u) => {
+      unsubProfile()
       setUser(u)
       if (u) {
-        const snap = await getDoc(doc(db, 'users', u.uid))
-        setProfile(snap.exists() ? snap.data() : null)
+        unsubProfile = onSnapshot(doc(db, 'users', u.uid), (snap) => {
+          setProfile(snap.exists() ? snap.data() : null)
+          setLoading(false)
+        })
       } else {
         setProfile(null)
+        setLoading(false)
       }
-      setLoading(false)
     })
-    return unsub
+    return () => {
+      unsub()
+      unsubProfile()
+    }
   }, [])
 
   async function login(email, password) {
