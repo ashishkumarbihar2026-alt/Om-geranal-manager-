@@ -11,7 +11,7 @@ function startOfToday() {
 
 export default function Dashboard() {
   const { user, profile } = useAuth()
-  const [sales, setSales] = useState([])
+  const [invoices, setInvoices] = useState([])
 
   useEffect(() => {
     if (!user) return
@@ -21,15 +21,19 @@ export default function Dashboard() {
       limit(200)
     )
     const unsub = onSnapshot(q, (snap) => {
-      setSales(snap.docs.map((d) => d.data()))
+      setInvoices(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
     return unsub
   }, [user])
 
   const todayStart = startOfToday()
-  const todaySales = sales.filter((s) => s.timestamp >= todayStart)
-  const todayTotal = todaySales.reduce((sum, s) => sum + s.soldPrice, 0)
-  const todayProfit = todaySales.reduce((sum, s) => sum + s.profit, 0)
+  const todayInvoices = invoices.filter((inv) => inv.timestamp >= todayStart)
+  const todayTotal = todayInvoices.reduce((sum, inv) => sum + inv.total, 0)
+  const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.profit, 0)
+  const todayItems = todayInvoices.reduce(
+    (sum, inv) => sum + inv.items.reduce((s, it) => s + it.qty, 0),
+    0
+  )
 
   return (
     <div className="page">
@@ -47,29 +51,31 @@ export default function Dashboard() {
         </div>
         <div className="stat-card">
           <span className="stat-label">Aaj Items Becha</span>
-          <span className="stat-value">{todaySales.length}</span>
+          <span className="stat-value">{todayItems}</span>
         </div>
       </div>
 
-      <h3 className="section-title">Recent Sales</h3>
+      <h3 className="section-title">Recent Bills</h3>
       <div className="list">
-        {sales.length === 0 && <p className="empty-state">Abhi tak koi sale nahi hui</p>}
-        {sales.slice(0, 20).map((s, i) => (
-          <div className="sale-row" key={i}>
+        {invoices.length === 0 && <p className="empty-state">Abhi tak koi bill nahi bana</p>}
+        {invoices.slice(0, 20).map((inv) => (
+          <div className="sale-row" key={inv.id}>
             <div>
-              <strong>{s.productName}</strong>
+              <strong>{inv.invoiceNo}</strong>
               <span className="sale-time">
-                {new Date(s.timestamp).toLocaleString('en-IN', {
+                {new Date(inv.timestamp).toLocaleString('en-IN', {
                   day: '2-digit',
                   month: 'short',
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
+                {' · '}
+                {inv.items.length} items
               </span>
             </div>
             <div className="sale-amounts">
-              <span>₹{s.soldPrice}</span>
-              <span className="sale-profit">+₹{s.profit.toFixed(0)}</span>
+              <span>₹{inv.total.toFixed(0)}</span>
+              <span className="sale-profit">+₹{inv.profit.toFixed(0)}</span>
             </div>
           </div>
         ))}

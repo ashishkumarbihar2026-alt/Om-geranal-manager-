@@ -1,16 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore'
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  writeBatch,
+  doc,
+} from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import PrintLabel from '../components/PrintLabel'
+import PrintInvoice from '../components/PrintInvoice'
+
+function makeInvoiceNo() {
+  return 'INV' + String(Date.now()).slice(-8)
+}
 
 export default function Sell() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [products, setProducts] = useState([])
   const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState(null)
-  const [soldPrice, setSoldPrice] = useState('')
-  const [lastSale, setLastSale] = useState(null)
+  const [cart, setCart] = useState([]) // { productId, name, shopPrice, mrp, price, qty }
+  const [lastInvoice, setLastInvoice] = useState(null)
   const [scanning, setScanning] = useState(false)
   const [scanSupported, setScanSupported] = useState(true)
   const [scanMsg, setScanMsg] = useState('')
@@ -30,10 +41,39 @@ export default function Sell() {
     setScanSupported('BarcodeDetector' in window)
   }, [])
 
-  function pickProduct(p) {
-    setSelected(p)
-    setSoldPrice(String(p.mrp))
+  function addToCart(p) {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.productId === p.id)
+      if (existing) {
+        return prev.map((item) =>
+          item.productId === p.id ? { ...item, qty: item.qty + 1 } : item
+        )
+      }
+      return [
+        ...prev,
+        {
+          productId: p.id,
+          name: p.name,
+          shopPrice: p.shopPrice,
+          mrp: p.mrp,
+          price: p.mrp,
+          qty: 1,
+        },
+      ]
+    })
     setSearch('')
+  }
+
+  function updateCartItem(productId, field, value) {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.productId === productId ? { ...item, [field]: Number(value) } : item
+      )
+    )
+  }
+
+  function removeFromCart(productId) {
+    setCart((prev) => prev.filter((item) => item.productId !== productId))
   }
 
   async function startScan() {
@@ -60,7 +100,7 @@ export default function Sell() {
             return
           }
         } catch {
-          // frame not ready yet, ignore
+          // frame not ready
         }
         requestAnimationFrame(loop)
       }
@@ -75,9 +115,9 @@ export default function Sell() {
     stopScan()
     const match = products.find((p) => p.barcode === code)
     if (match) {
-      pickProduct(match)
+      addToCart(match)
     } else {
-      setScanMsg(`Ye barcode (${code}) kisi product se match nahi hua. Naam se search kar lo.`)
+      setScanMsg('Ye barcode kisi product se match nahi hua. Naam se search kar lo.')
     }
   }
 
@@ -87,63 +127,82 @@ export default function Sell() {
     setScanning(false)
   }
 
-  async function handleSell(e) {
-    e.preventDefault()
-    if (!selected || !soldPrice) return
-    const sale = {
-      productId: selected.id,
-      productName: selected.name,
-      shopPrice: selected.shopPrice,
-      mrp: selected.mrp,
-      soldPrice: Number(soldPrice),
-      profit: Number(soldPrice) - selected.shopPrice,
-      timestamp: Date.now(),
-    }
-    await addDoc(collection(db, 'users', user.uid, 'sales'), sale)
-    setLastSale(sale)
-    setSelected(null)
-    setSoldPrice('')
-  }
-
   const filtered = search
     ? products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     : []
 
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+  const profit = cart.reduce((sum, item) => sum + (item.price - item.shopPrice) * item.qty, 0)
+
+  async function handleCheckout() {
+    if (cart.length === 0) return
+    const invoiceNo = makeInvoiceNo()
+    const invoice = {
+      invoiceNo,
+      items: cart.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        qty: item.qty,
+        price: item.price,
+        shopPrice: item.shopPrice,
+      })),
+      total,
+      profit,
+      timestamp: Date.now(),
+    }
+
+    const batch = writeBatch(db)
+    const invoiceRef = doc(collection(db, 'users', user.uid, 'sales'))
+    batch.set(invoiceRef, invoice)
+
+    cart.forEach((item) => {
+      const product = products.find((p) => p.id === item.productId)
+      if (product) {
+        batch.update(doc(db, 'users', user.uid, 'products', item.productId), {
+          stock: (product.stock || 0) - item.qty,
+        })
+      }
+    })
+
+    await batch.commit()
+    setLastInvoice(invoice)
+    setCart([])
+  }
+
   return (
     <div className="page">
-      <h2 className="page-title">Sell</h2>
+      <h2 className="page-title">Billing</h2>
 
-      {!selected && (
-        <div className="card">
-          <label>
-            Product dhoondo
-            <div className="barcode-input-row">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Product ka naam type karo"
-                autoFocus
-              />
-              {scanSupported && (
-                <button type="button" className="btn-scan" onClick={startScan}>
-                  📷 Scan
-                </button>
-              )}
-            </div>
-          </label>
-          {scanMsg && <p className="form-error">{scanMsg}</p>}
-          {filtered.length > 0 && (
-            <div className="search-results">
-              {filtered.map((p) => (
-                <button key={p.id} className="search-result-row" onClick={() => pickProduct(p)}>
-                  <span>{p.name}</span>
-                  <span className="price-mrp">MRP ₹{p.mrp}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="card">
+        <label>
+          Product dhoondo ya scan karo
+          <div className="barcode-input-row">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Product ka naam type karo"
+            />
+            {scanSupported && (
+              <button type="button" className="btn-scan" onClick={startScan}>
+                📷 Scan
+              </button>
+            )}
+          </div>
+        </label>
+        {scanMsg && <p className="form-error">{scanMsg}</p>}
+        {filtered.length > 0 && (
+          <div className="search-results">
+            {filtered.map((p) => (
+              <button key={p.id} className="search-result-row" onClick={() => addToCart(p)}>
+                <span>{p.name}</span>
+                <span className="price-mrp">
+                  MRP ₹{p.mrp} · Stock {p.stock ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {scanning && (
         <div className="scan-overlay">
@@ -155,42 +214,55 @@ export default function Sell() {
         </div>
       )}
 
-      {selected && (
-        <form className="card form-card" onSubmit={handleSell}>
-          <p className="sell-selected-name">{selected.name}</p>
-          <div className="sell-meta">
-            <span>Dukan Price: ₹{selected.shopPrice}</span>
-            <span>MRP: ₹{selected.mrp}</span>
+      {cart.length > 0 && (
+        <div className="card cart-card">
+          <h3 className="section-title" style={{ margin: 0 }}>
+            Bill ke items
+          </h3>
+          {cart.map((item) => (
+            <div className="cart-row" key={item.productId}>
+              <div className="cart-row-name">{item.name}</div>
+              <div className="cart-row-fields">
+                <label className="cart-qty">
+                  Qty
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.qty}
+                    onChange={(e) => updateCartItem(item.productId, 'qty', e.target.value)}
+                  />
+                </label>
+                <label className="cart-price">
+                  Price
+                  <input
+                    type="number"
+                    value={item.price}
+                    onChange={(e) => updateCartItem(item.productId, 'price', e.target.value)}
+                  />
+                </label>
+                <span className="cart-line-total">₹{(item.price * item.qty).toFixed(0)}</span>
+                <button className="btn-delete" onClick={() => removeFromCart(item.productId)}>
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="cart-totals">
+            <span>Total: ₹{total.toFixed(0)}</span>
+            <span className="cart-profit">Profit: ₹{profit.toFixed(0)}</span>
           </div>
-          <label>
-            Customer se liya gaya price (₹)
-            <input
-              type="number"
-              inputMode="decimal"
-              value={soldPrice}
-              onChange={(e) => setSoldPrice(e.target.value)}
-              required
-              autoFocus
-            />
-          </label>
-          <p className="profit-preview">
-            Profit: ₹{soldPrice ? (Number(soldPrice) - selected.shopPrice).toFixed(2) : '0.00'}
-          </p>
-          <div className="btn-row">
-            <button type="button" className="btn-secondary" onClick={() => setSelected(null)}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-primary">
-              Sale Confirm Karo
-            </button>
-          </div>
-        </form>
+
+          <button className="btn-primary" onClick={handleCheckout}>
+            Bill Confirm Karo
+          </button>
+        </div>
       )}
 
-      {lastSale && (
+      {lastInvoice && (
         <div className="card sale-done-card">
-          <p>✅ Sale record ho gayi — profit ₹{lastSale.profit.toFixed(2)}</p>
-          <PrintLabel name={lastSale.productName} mrp={lastSale.mrp} />
+          <p>✅ Bill ban gaya — {lastInvoice.invoiceNo} (profit ₹{lastInvoice.profit.toFixed(0)})</p>
+          <PrintInvoice invoice={lastInvoice} shopName={profile?.shopName} printerWidth={profile?.printerWidth || '80'} />
         </div>
       )}
     </div>
