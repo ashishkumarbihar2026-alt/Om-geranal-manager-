@@ -9,6 +9,20 @@ function startOfToday() {
   return d.getTime()
 }
 
+// Purane (single-item) sale records ko bhi naye invoice jaisa treat karo
+function normalize(inv) {
+  if (Array.isArray(inv.items)) return inv
+  return {
+    ...inv,
+    invoiceNo: inv.invoiceNo || '—',
+    items: inv.productName
+      ? [{ name: inv.productName, qty: 1, price: inv.soldPrice ?? 0, shopPrice: inv.shopPrice ?? 0 }]
+      : [],
+    total: inv.total ?? inv.soldPrice ?? 0,
+    profit: inv.profit ?? 0,
+  }
+}
+
 export default function Dashboard() {
   const { user, profile } = useAuth()
   const [invoices, setInvoices] = useState([])
@@ -21,17 +35,17 @@ export default function Dashboard() {
       limit(200)
     )
     const unsub = onSnapshot(q, (snap) => {
-      setInvoices(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setInvoices(snap.docs.map((d) => normalize({ id: d.id, ...d.data() })))
     })
     return unsub
   }, [user])
 
   const todayStart = startOfToday()
   const todayInvoices = invoices.filter((inv) => inv.timestamp >= todayStart)
-  const todayTotal = todayInvoices.reduce((sum, inv) => sum + inv.total, 0)
-  const todayProfit = todayInvoices.reduce((sum, inv) => sum + inv.profit, 0)
+  const todayTotal = todayInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+  const todayProfit = todayInvoices.reduce((sum, inv) => sum + (inv.profit || 0), 0)
   const todayItems = todayInvoices.reduce(
-    (sum, inv) => sum + inv.items.reduce((s, it) => s + it.qty, 0),
+    (sum, inv) => sum + (inv.items || []).reduce((s, it) => s + (it.qty || 0), 0),
     0
   )
 
@@ -70,12 +84,12 @@ export default function Dashboard() {
                   minute: '2-digit',
                 })}
                 {' · '}
-                {inv.items.length} items
+                {(inv.items || []).length} items
               </span>
             </div>
             <div className="sale-amounts">
-              <span>₹{inv.total.toFixed(0)}</span>
-              <span className="sale-profit">+₹{inv.profit.toFixed(0)}</span>
+              <span>₹{(inv.total || 0).toFixed(0)}</span>
+              <span className="sale-profit">+₹{(inv.profit || 0).toFixed(0)}</span>
             </div>
           </div>
         ))}

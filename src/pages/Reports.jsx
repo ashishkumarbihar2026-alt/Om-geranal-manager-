@@ -18,6 +18,19 @@ function rangeStart(kind) {
   return 0
 }
 
+function normalize(inv) {
+  if (Array.isArray(inv.items)) return inv
+  return {
+    ...inv,
+    invoiceNo: inv.invoiceNo || '—',
+    items: inv.productName
+      ? [{ name: inv.productName, qty: 1, price: inv.soldPrice ?? 0, shopPrice: inv.shopPrice ?? 0 }]
+      : [],
+    total: inv.total ?? inv.soldPrice ?? 0,
+    profit: inv.profit ?? 0,
+  }
+}
+
 export default function Reports() {
   const { user, profile } = useAuth()
   const [invoices, setInvoices] = useState([])
@@ -29,7 +42,7 @@ export default function Reports() {
     if (!user) return
     const q = query(collection(db, 'users', user.uid, 'sales'), orderBy('timestamp', 'desc'))
     const unsub = onSnapshot(q, (snap) => {
-      setInvoices(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setInvoices(snap.docs.map((d) => normalize({ id: d.id, ...d.data() })))
     })
     return unsub
   }, [user])
@@ -42,10 +55,10 @@ export default function Reports() {
   }
 
   const filtered = invoices.filter((inv) => inv.timestamp >= from && inv.timestamp <= to)
-  const totalSales = filtered.reduce((sum, inv) => sum + inv.total, 0)
-  const totalProfit = filtered.reduce((sum, inv) => sum + inv.profit, 0)
+  const totalSales = filtered.reduce((sum, inv) => sum + (inv.total || 0), 0)
+  const totalProfit = filtered.reduce((sum, inv) => sum + (inv.profit || 0), 0)
   const itemCount = filtered.reduce(
-    (sum, inv) => sum + inv.items.reduce((s, it) => s + it.qty, 0),
+    (sum, inv) => sum + (inv.items || []).reduce((s, it) => s + (it.qty || 0), 0),
     0
   )
 
@@ -61,13 +74,13 @@ export default function Reports() {
       invoices: filtered.map((inv) => ({
         invoiceNo: inv.invoiceNo,
         date: new Date(inv.timestamp).toISOString().slice(0, 10),
-        items: inv.items.map((it) => ({
+        items: (inv.items || []).map((it) => ({
           name: it.name,
           qty: it.qty,
           rate: it.price,
           amount: it.price * it.qty,
         })),
-        invoiceValue: inv.total,
+        invoiceValue: inv.total || 0,
       })),
     }
     const blob = new Blob([JSON.stringify(gstrData, null, 2)], { type: 'application/json' })
@@ -150,12 +163,12 @@ export default function Reports() {
                   minute: '2-digit',
                 })}
                 {' · '}
-                {inv.items.length} items
+                {(inv.items || []).length} items
               </span>
             </div>
             <div className="sale-amounts">
-              <span>₹{inv.total.toFixed(0)}</span>
-              <span className="sale-profit">+₹{inv.profit.toFixed(0)}</span>
+              <span>₹{(inv.total || 0).toFixed(0)}</span>
+              <span className="sale-profit">+₹{(inv.profit || 0).toFixed(0)}</span>
             </div>
           </div>
         ))}
