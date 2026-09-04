@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import TopBar from '../components/TopBar'
 
 function rangeStart(kind) {
   const d = new Date()
@@ -94,7 +95,7 @@ export default function Reports() {
 
   return (
     <div className="page">
-      <h2 className="page-title">Reports</h2>
+      <TopBar title="Reports" subtitle="Business performance track karo" />
 
       <div className="range-tabs">
         {['today', 'week', 'month', 'custom'].map((k) => (

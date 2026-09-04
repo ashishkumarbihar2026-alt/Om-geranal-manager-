@@ -11,6 +11,7 @@ import {
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import PrintInvoice from '../components/PrintInvoice'
+import TopBar from '../components/TopBar'
 
 function makeInvoiceNo() {
   return 'INV' + String(Date.now()).slice(-8)
@@ -171,7 +172,7 @@ export default function Sell() {
 
   return (
     <div className="page">
-      <h2 className="page-title">Billing</h2>
+      <TopBar title="Billing" subtitle="Bill banao, print karo" />
 
       <div className="card">
         <label>

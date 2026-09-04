@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
+import TopBar from '../components/TopBar'
 
 export default function Profile() {
   const { profile, user, logout } = useAuth()
@@ -17,7 +18,7 @@ export default function Profile() {
 
   return (
     <div className="page">
-      <h2 className="page-title">Profile</h2>
+      <TopBar title="Profile" subtitle="Account aur settings manage karo" />
       <div className="card">
         <div className="profile-row">
           <span>Naam</span>

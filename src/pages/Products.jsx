@@ -13,6 +13,7 @@ import {
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import PrintBarcodeLabel from '../components/PrintBarcodeLabel'
+import TopBar from '../components/TopBar'
 
 function generateBarcode() {
   return String(Date.now()).slice(-12).padStart(12, '0')
@@ -162,8 +163,8 @@ export default function Products() {
 
   return (
     <div className="page">
+      <TopBar title="Products" subtitle="Apni dukan ka inventory manage karo" />
       <div className="page-header-row">
-        <h2 className="page-title">Products</h2>
         {!bulkMode ? (
           <button className="btn-secondary btn-small" onClick={enterBulkMode}>
             Bulk Edit
