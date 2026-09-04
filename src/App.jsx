@@ -7,6 +7,7 @@ import Sell from './pages/Sell'
 import Reports from './pages/Reports'
 import Profile from './pages/Profile'
 import BottomNav from './components/BottomNav'
+import Sidebar from './components/Sidebar'
 
 function Protected({ children }) {
   const { user, loading } = useAuth()
@@ -19,49 +20,52 @@ export default function App() {
   const { user } = useAuth()
   return (
     <div className="app-shell">
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route
-          path="/"
-          element={
-            <Protected>
-              <Dashboard />
-            </Protected>
-          }
-        />
-        <Route
-          path="/products"
-          element={
-            <Protected>
-              <Products />
-            </Protected>
-          }
-        />
-        <Route
-          path="/sell"
-          element={
-            <Protected>
-              <Sell />
-            </Protected>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <Protected>
-              <Reports />
-            </Protected>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <Protected>
-              <Profile />
-            </Protected>
-          }
-        />
-      </Routes>
+      {user && <Sidebar />}
+      <div className="app-main">
+        <Routes>
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+          <Route
+            path="/"
+            element={
+              <Protected>
+                <Dashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <Protected>
+                <Products />
+              </Protected>
+            }
+          />
+          <Route
+            path="/sell"
+            element={
+              <Protected>
+                <Sell />
+              </Protected>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <Protected>
+                <Reports />
+              </Protected>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <Protected>
+                <Profile />
+              </Protected>
+            }
+          />
+        </Routes>
+      </div>
       {user && <BottomNav />}
     </div>
   )
