@@ -552,6 +552,10 @@ input:focus {
 }
 
 @media print {
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
   body * {
     visibility: hidden;
   }
@@ -561,7 +565,7 @@ input:focus {
   }
   .print-only-label {
     display: block;
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     width: 58mm;
@@ -816,6 +820,10 @@ input:focus {
 }
 
 @media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
   body * {
     visibility: hidden;
   }
@@ -825,7 +833,7 @@ input:focus {
   }
   .print-only-invoice {
     display: block;
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     padding: 3mm;
