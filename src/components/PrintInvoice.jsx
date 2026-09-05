@@ -21,6 +21,7 @@ export default function PrintInvoice({ invoice, shopName, printerWidth = '80' })
             minute: '2-digit',
           })}
         </p>
+        {invoice.customerName && <p className="invoice-date">Customer: {invoice.customerName}</p>}
         <div className="invoice-divider" />
         <table className="invoice-table">
           <thead>
@@ -44,6 +45,7 @@ export default function PrintInvoice({ invoice, shopName, printerWidth = '80' })
         </table>
         <div className="invoice-divider" />
         <p className="invoice-total">Total: ₹{invoice.total.toFixed(0)}</p>
+        {invoice.due > 0 && <p className="invoice-total">Udhaar: ₹{invoice.due.toFixed(0)}</p>}
         <p className="invoice-thanks">Dhanyavaad! Phir aaiyega</p>
       </div>
     </>

@@ -5,6 +5,7 @@ const items = [
   { to: '/', label: 'Dashboard', icon: '🏠' },
   { to: '/products', label: 'Products', icon: '📦' },
   { to: '/sell', label: 'Bills', icon: '🧾' },
+  { to: '/customers', label: 'Customers', icon: '👥' },
   { to: '/reports', label: 'Reports', icon: '📈' },
   { to: '/profile', label: 'Profile', icon: '👤' },
 ]
