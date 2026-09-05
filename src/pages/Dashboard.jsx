@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { Link } from 'react-router-dom'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
 import TopBar from '../components/TopBar'
@@ -9,6 +10,13 @@ function startOfDay(d) {
   const x = new Date(d)
   x.setHours(0, 0, 0, 0)
   return x.getTime()
+}
+
+function startOfMonth() {
+  const d = new Date()
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
 }
 
 // Purane (single-item) sale records ko bhi naye invoice jaisa treat karo
@@ -67,6 +75,12 @@ export default function Dashboard() {
 
   const salesChange = pctChange(todayTotal, yesterdayTotal)
   const profitChange = pctChange(todayProfit, yesterdayProfit)
+
+  const monthStart = startOfMonth()
+  const monthInvoices = invoices.filter((inv) => inv.timestamp >= monthStart)
+  const monthTotal = monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+  const monthProfit = monthInvoices.reduce((sum, inv) => sum + (inv.profit || 0), 0)
+  const totalOutstanding = invoices.reduce((sum, inv) => sum + (inv.due || 0), 0)
 
   const chartData = useMemo(() => {
     const days = []
@@ -172,6 +186,59 @@ export default function Dashboard() {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="dash-grid-3">
+        <div className="card">
+          <h3 className="section-title" style={{ margin: '0 0 12px' }}>
+            Quick Actions
+          </h3>
+          <div className="quick-actions-grid">
+            <Link to="/sell" className="quick-action">
+              <span className="quick-action-icon">🧾</span>
+              Create Bill
+            </Link>
+            <Link to="/products" className="quick-action">
+              <span className="quick-action-icon">📦</span>
+              Add Product
+            </Link>
+            <Link to="/customers" className="quick-action">
+              <span className="quick-action-icon">👥</span>
+              Customers
+            </Link>
+            <Link to="/reports" className="quick-action">
+              <span className="quick-action-icon">📈</span>
+              Reports
+            </Link>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 className="section-title" style={{ margin: '0 0 12px' }}>
+            Business Summary (Is Mahine)
+          </h3>
+          <div className="summary-row">
+            <span>Total Sales</span>
+            <strong>₹{monthTotal.toFixed(0)}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Total Profit</span>
+            <strong>₹{monthProfit.toFixed(0)}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Total Bills</span>
+            <strong>{monthInvoices.length}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Outstanding (Udhaar)</span>
+            <strong className={totalOutstanding > 0 ? 'customer-due' : ''}>
+              ₹{totalOutstanding.toFixed(0)}
+            </strong>
+          </div>
+          <Link to="/reports" className="summary-link">
+            View Full Report →
+          </Link>
         </div>
       </div>
 

@@ -20,12 +20,19 @@ function makeInvoiceNo() {
 export default function Sell() {
   const { user, profile } = useAuth()
   const [products, setProducts] = useState([])
+  const [customers, setCustomers] = useState([])
   const [search, setSearch] = useState('')
   const [cart, setCart] = useState([]) // { productId, name, shopPrice, mrp, price, qty }
   const [lastInvoice, setLastInvoice] = useState(null)
   const [scanning, setScanning] = useState(false)
   const [scanSupported, setScanSupported] = useState(true)
   const [scanMsg, setScanMsg] = useState('')
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [newCustomerName, setNewCustomerName] = useState('')
+  const [newCustomerPhone, setNewCustomerPhone] = useState('')
+  const [showNewCustomer, setShowNewCustomer] = useState(false)
+  const [amountReceived, setAmountReceived] = useState('')
   const videoRef = useRef(null)
   const streamRef = useRef(null)
 
@@ -35,7 +42,14 @@ export default function Sell() {
     const unsub = onSnapshot(q, (snap) => {
       setProducts(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
-    return unsub
+    const qc = query(collection(db, 'users', user.uid, 'customers'), orderBy('name'))
+    const unsubC = onSnapshot(qc, (snap) => {
+      setCustomers(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+    })
+    return () => {
+      unsub()
+      unsubC()
+    }
   }, [user])
 
   useEffect(() => {
@@ -132,11 +146,38 @@ export default function Sell() {
     ? products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     : []
 
+  const filteredCustomers = customerSearch
+    ? customers.filter(
+        (c) =>
+          c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+          (c.phone || '').includes(customerSearch)
+      )
+    : []
+
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0)
   const profit = cart.reduce((sum, item) => sum + (item.price - item.shopPrice) * item.qty, 0)
+  const received = amountReceived === '' ? total : Number(amountReceived)
+  const due = Math.max(0, total - received)
+
+  async function handleAddNewCustomer() {
+    if (!newCustomerName) return
+    const ref = await addDoc(collection(db, 'users', user.uid, 'customers'), {
+      name: newCustomerName,
+      phone: newCustomerPhone || '',
+      createdAt: Date.now(),
+    })
+    setSelectedCustomer({ id: ref.id, name: newCustomerName, phone: newCustomerPhone })
+    setNewCustomerName('')
+    setNewCustomerPhone('')
+    setShowNewCustomer(false)
+  }
 
   async function handleCheckout() {
     if (cart.length === 0) return
+    if (due > 0 && !selectedCustomer) {
+      alert('Udhaar rakhne ke liye pehle customer select karo.')
+      return
+    }
     const invoiceNo = makeInvoiceNo()
     const invoice = {
       invoiceNo,
@@ -149,6 +190,11 @@ export default function Sell() {
       })),
       total,
       profit,
+      amountPaid: received,
+      due,
+      customerId: selectedCustomer?.id || null,
+      customerName: selectedCustomer?.name || null,
+      customerPhone: selectedCustomer?.phone || null,
       timestamp: Date.now(),
     }
 
@@ -168,11 +214,79 @@ export default function Sell() {
     await batch.commit()
     setLastInvoice(invoice)
     setCart([])
+    setSelectedCustomer(null)
+    setAmountReceived('')
   }
 
   return (
     <div className="page">
       <TopBar title="Billing" subtitle="Bill banao, print karo" />
+
+      <div className="card">
+        <label>Customer (optional — udhaar ke liye zaroori)</label>
+        {selectedCustomer ? (
+          <div className="selected-customer-chip">
+            <span>
+              {selectedCustomer.name} {selectedCustomer.phone ? `· ${selectedCustomer.phone}` : ''}
+            </span>
+            <button className="btn-delete" onClick={() => setSelectedCustomer(null)}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="barcode-input-row">
+              <input
+                value={customerSearch}
+                onChange={(e) => setCustomerSearch(e.target.value)}
+                placeholder="Naam ya phone se dhoondo"
+              />
+              <button
+                type="button"
+                className="btn-scan"
+                onClick={() => setShowNewCustomer(!showNewCustomer)}
+              >
+                + Naya
+              </button>
+            </div>
+            {filteredCustomers.length > 0 && (
+              <div className="search-results">
+                {filteredCustomers.map((c) => (
+                  <button
+                    key={c.id}
+                    className="search-result-row"
+                    onClick={() => {
+                      setSelectedCustomer(c)
+                      setCustomerSearch('')
+                    }}
+                  >
+                    <span>{c.name}</span>
+                    <span className="price-mrp">{c.phone}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {showNewCustomer && (
+              <div className="new-customer-form">
+                <input
+                  placeholder="Naam"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                />
+                <input
+                  placeholder="Phone (optional)"
+                  value={newCustomerPhone}
+                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                  inputMode="tel"
+                />
+                <button className="btn-primary btn-small" onClick={handleAddNewCustomer}>
+                  Add Karo
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <div className="card">
         <label>
@@ -249,10 +363,21 @@ export default function Sell() {
             </div>
           ))}
 
+          <label>
+            Kitna Amount mila (baaki udhaar ho jayega)
+            <input
+              type="number"
+              placeholder={String(total)}
+              value={amountReceived}
+              onChange={(e) => setAmountReceived(e.target.value)}
+            />
+          </label>
+
           <div className="cart-totals">
             <span>Total: ₹{total.toFixed(0)}</span>
             <span className="cart-profit">Profit: ₹{profit.toFixed(0)}</span>
           </div>
+          {due > 0 && <p className="form-error">Udhaar rahega: ₹{due.toFixed(0)}</p>}
 
           <button className="btn-primary" onClick={handleCheckout}>
             Bill Confirm Karo
@@ -262,8 +387,15 @@ export default function Sell() {
 
       {lastInvoice && (
         <div className="card sale-done-card">
-          <p>✅ Bill ban gaya — {lastInvoice.invoiceNo} (profit ₹{lastInvoice.profit.toFixed(0)})</p>
-          <PrintInvoice invoice={lastInvoice} shopName={profile?.shopName} printerWidth={profile?.printerWidth || '80'} />
+          <p>
+            ✅ Bill ban gaya — {lastInvoice.invoiceNo} (profit ₹{lastInvoice.profit.toFixed(0)})
+            {lastInvoice.due > 0 && ` · Udhaar ₹${lastInvoice.due.toFixed(0)}`}
+          </p>
+          <PrintInvoice
+            invoice={lastInvoice}
+            shopName={profile?.shopName}
+            printerWidth={profile?.printerWidth || '80'}
+          />
         </div>
       )}
     </div>
