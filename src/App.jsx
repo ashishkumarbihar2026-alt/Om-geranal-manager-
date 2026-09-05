@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import Sell from './pages/Sell'
 import Reports from './pages/Reports'
+import Customers from './pages/Customers'
 import Profile from './pages/Profile'
 import BottomNav from './components/BottomNav'
 import Sidebar from './components/Sidebar'
@@ -53,6 +54,14 @@ export default function App() {
             element={
               <Protected>
                 <Reports />
+              </Protected>
+            }
+          />
+          <Route
+            path="/customers"
+            element={
+              <Protected>
+                <Customers />
               </Protected>
             }
           />

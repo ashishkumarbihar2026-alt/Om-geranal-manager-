@@ -342,6 +342,129 @@ input:focus {
   font-size: 12px;
 }
 
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 6px;
+  border-radius: 12px;
+  background: var(--cream);
+  text-decoration: none;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.quick-action-icon {
+  font-size: 18px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.summary-row:last-of-type {
+  border-bottom: none;
+}
+
+.summary-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---------- Customers ---------- */
+.customer-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.customer-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.customer-phone {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+
+.customer-amounts {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.customer-due {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.customer-clear {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.customer-bills {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+
+.selected-customer-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.new-customer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.new-customer-form input {
+  padding: 10px;
+}
+
 /* ---------- Desktop layout (sidebar + wide content) ---------- */
 @media (min-width: 900px) {
   .app-shell {
