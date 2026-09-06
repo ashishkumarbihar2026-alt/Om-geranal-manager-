@@ -15,6 +15,8 @@ import { useAuth } from '../context/AuthContext'
 import PrintBarcodeLabel from '../components/PrintBarcodeLabel'
 import TopBar from '../components/TopBar'
 
+const LOW_STOCK_THRESHOLD = 5
+
 function generateBarcode() {
   return String(Date.now()).slice(-12).padStart(12, '0')
 }
@@ -26,6 +28,8 @@ export default function Products() {
   const [shopPrice, setShopPrice] = useState('')
   const [mrp, setMrp] = useState('')
   const [stock, setStock] = useState('')
+  const [category, setCategory] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
   const [barcode, setBarcode] = useState('')
   const [scanning, setScanning] = useState(false)
   const [scanSupported, setScanSupported] = useState(true)
@@ -35,6 +39,10 @@ export default function Products() {
   const [adjustingId, setAdjustingId] = useState(null)
   const [adjustQty, setAdjustQty] = useState('')
   const [adjustReason, setAdjustReason] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editValues, setEditValues] = useState({})
+  const [search, setSearch] = useState('')
+  const [lowStockOnly, setLowStockOnly] = useState(false)
   const videoRef = useRef(null)
   const streamRef = useRef(null)
 
@@ -75,7 +83,7 @@ export default function Products() {
             return
           }
         } catch {
-          // frame not ready yet
+          // frame not ready
         }
         requestAnimationFrame(loop)
       }
@@ -100,6 +108,8 @@ export default function Products() {
       shopPrice: Number(shopPrice),
       mrp: Number(mrp),
       stock: stock === '' ? 0 : Number(stock),
+      category: category || '',
+      imageUrl: imageUrl || '',
       barcode: barcode || generateBarcode(),
       createdAt: Date.now(),
     })
@@ -107,6 +117,8 @@ export default function Products() {
     setShopPrice('')
     setMrp('')
     setStock('')
+    setCategory('')
+    setImageUrl('')
     setBarcode('')
   }
 
@@ -115,6 +127,30 @@ export default function Products() {
     await deleteDoc(doc(db, 'users', user.uid, 'products', id))
   }
 
+  // ---------- Single-item edit ----------
+  function startEdit(p) {
+    setEditingId(p.id)
+    setEditValues({
+      name: p.name,
+      shopPrice: p.shopPrice,
+      mrp: p.mrp,
+      stock: p.stock ?? 0,
+      category: p.category || '',
+    })
+  }
+
+  async function saveEdit(id) {
+    await updateDoc(doc(db, 'users', user.uid, 'products', id), {
+      name: editValues.name,
+      shopPrice: Number(editValues.shopPrice),
+      mrp: Number(editValues.mrp),
+      stock: Number(editValues.stock),
+      category: editValues.category,
+    })
+    setEditingId(null)
+  }
+
+  // ---------- Bulk edit ----------
   function enterBulkMode() {
     const seed = {}
     products.forEach((p) => {
@@ -143,6 +179,7 @@ export default function Products() {
     setBulkMode(false)
   }
 
+  // ---------- Stock adjustment ----------
   async function saveAdjustment(product) {
     const qty = Number(adjustQty)
     if (!qty) return
@@ -161,14 +198,82 @@ export default function Products() {
     setAdjustReason('')
   }
 
+  // ---------- CSV export ----------
+  function exportCsv() {
+    const header = 'Name,Category,Dukan Price,MRP,Stock,Barcode\n'
+    const rows = products
+      .map((p) => `"${p.name}","${p.category || ''}",${p.shopPrice},${p.mrp},${p.stock ?? 0},${p.barcode}`)
+      .join('\n')
+    const blob = new Blob([header + rows], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'products.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const totalProducts = products.length
+  const lowStockCount = products.filter((p) => (p.stock ?? 0) <= LOW_STOCK_THRESHOLD).length
+  const totalValue = products.reduce((sum, p) => sum + (p.stock || 0) * (p.shopPrice || 0), 0)
+  const categoryCount = new Set(products.map((p) => p.category).filter(Boolean)).size
+
+  const filteredProducts = products.filter((p) => {
+    if (lowStockOnly && (p.stock ?? 0) > LOW_STOCK_THRESHOLD) return false
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
+    return true
+  })
+
   return (
     <div className="page">
       <TopBar title="Products" subtitle="Apni dukan ka inventory manage karo" />
+
+      <div className="stat-grid stat-grid-4" style={{ marginBottom: 16 }}>
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <span className="stat-icon icon-blue">🛍️</span>
+          </div>
+          <span className="stat-label">Total Products</span>
+          <span className="stat-value">{totalProducts}</span>
+        </div>
+        <div
+          className="stat-card"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setLowStockOnly(!lowStockOnly)}
+        >
+          <div className="stat-card-top">
+            <span className="stat-icon icon-green">📦</span>
+          </div>
+          <span className="stat-label">Low Stock</span>
+          <span className="stat-value">{lowStockCount}</span>
+          <span className="stat-change">{lowStockOnly ? 'Filter ON — dubara dabao' : 'Dekhne ke liye dabao'}</span>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <span className="stat-icon icon-orange">₹</span>
+          </div>
+          <span className="stat-label">Total Value (stock × price)</span>
+          <span className="stat-value">₹{totalValue.toFixed(0)}</span>
+        </div>
+        <div className="stat-card">
+          <div className="stat-card-top">
+            <span className="stat-icon icon-purple">🏷️</span>
+          </div>
+          <span className="stat-label">Categories</span>
+          <span className="stat-value">{categoryCount}</span>
+        </div>
+      </div>
+
       <div className="page-header-row">
         {!bulkMode ? (
-          <button className="btn-secondary btn-small" onClick={enterBulkMode}>
-            Bulk Edit
-          </button>
+          <>
+            <button className="btn-secondary btn-small" onClick={exportCsv}>
+              ⬇️ Export CSV
+            </button>
+            <button className="btn-secondary btn-small" onClick={enterBulkMode}>
+              Bulk Edit
+            </button>
+          </>
         ) : (
           <div className="btn-row-inline">
             <button className="btn-secondary btn-small" onClick={() => setBulkMode(false)}>
@@ -211,14 +316,33 @@ export default function Products() {
             </label>
           </div>
 
+          <div className="price-row">
+            <label>
+              Shuru ka Stock (quantity)
+              <input
+                type="number"
+                inputMode="numeric"
+                value={stock}
+                onChange={(e) => setStock(e.target.value)}
+                placeholder="0"
+              />
+            </label>
+            <label>
+              Category (optional)
+              <input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Jaise: Snacks, Drinks"
+              />
+            </label>
+          </div>
+
           <label>
-            Shuru ka Stock (quantity)
+            Photo ka link (optional)
             <input
-              type="number"
-              inputMode="numeric"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              placeholder="0"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://..."
             />
           </label>
 
@@ -254,10 +378,22 @@ export default function Products() {
         </div>
       )}
 
-      <div className="list">
-        {products.length === 0 && <p className="empty-state">Abhi koi product add nahi hua</p>}
+      {!bulkMode && (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Product search karo..."
+          />
+        </div>
+      )}
 
-        {products.map((p) =>
+      <div className="list">
+        {filteredProducts.length === 0 && (
+          <p className="empty-state">Koi product nahi mila</p>
+        )}
+
+        {filteredProducts.map((p) =>
           bulkMode ? (
             <div className="product-row bulk-row" key={p.id}>
               <div className="product-info">
@@ -290,12 +426,59 @@ export default function Products() {
                 </label>
               </div>
             </div>
+          ) : editingId === p.id ? (
+            <div className="product-row bulk-row" key={p.id}>
+              <input
+                value={editValues.name}
+                onChange={(e) => setEditValues({ ...editValues, name: e.target.value })}
+              />
+              <div className="bulk-fields">
+                <label>
+                  Dukan
+                  <input
+                    type="number"
+                    value={editValues.shopPrice}
+                    onChange={(e) => setEditValues({ ...editValues, shopPrice: e.target.value })}
+                  />
+                </label>
+                <label>
+                  MRP
+                  <input
+                    type="number"
+                    value={editValues.mrp}
+                    onChange={(e) => setEditValues({ ...editValues, mrp: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Stock
+                  <input
+                    type="number"
+                    value={editValues.stock}
+                    onChange={(e) => setEditValues({ ...editValues, stock: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="btn-row">
+                <button className="btn-secondary btn-small" onClick={() => setEditingId(null)}>
+                  Cancel
+                </button>
+                <button className="btn-primary btn-small" onClick={() => saveEdit(p.id)}>
+                  Save
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="product-row" key={p.id}>
+              {p.imageUrl ? (
+                <img src={p.imageUrl} alt={p.name} className="product-thumb" />
+              ) : (
+                <span className="product-thumb product-thumb-placeholder">📦</span>
+              )}
               <div className="product-info">
                 <strong>{p.name}</strong>
+                {p.category && <span className="barcode-tag">{p.category}</span>}
                 <span className="barcode-tag">#{p.barcode}</span>
-                <span className={'stock-tag' + ((p.stock ?? 0) <= 0 ? ' stock-low' : '')}>
+                <span className={'stock-tag' + ((p.stock ?? 0) <= LOW_STOCK_THRESHOLD ? ' stock-low' : '')}>
                   Stock: {p.stock ?? 0}
                 </span>
               </div>
@@ -304,6 +487,9 @@ export default function Products() {
                 <span className="price-mrp">MRP ₹{p.mrp}</span>
               </div>
               <div className="product-actions">
+                <button className="btn-icon" title="Edit karo" onClick={() => startEdit(p)}>
+                  ✏️
+                </button>
                 <button
                   className="btn-icon"
                   title="Stock adjust karo"
