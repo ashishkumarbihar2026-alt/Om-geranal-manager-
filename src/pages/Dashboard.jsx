@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore'import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
@@ -37,6 +36,7 @@ export default function Dashboard() {
   const { profile } = useAuth()
   const { user } = useAuth()
   const [invoices, setInvoices] = useState([])
+  const [customerCount, setCustomerCount] = useState(0)
 
   useEffect(() => {
     if (!user) return
@@ -48,7 +48,12 @@ export default function Dashboard() {
     const unsub = onSnapshot(q, (snap) => {
       setInvoices(snap.docs.map((d) => normalize({ id: d.id, ...d.data() })))
     })
-    return unsub
+    const qc = collection(db, 'users', user.uid, 'customers')
+    const unsubC = onSnapshot(qc, (snap) => setCustomerCount(snap.size))
+    return () => {
+      unsub()
+      unsubC()
+    }
   }, [user])
 
   const todayStart = startOfDay(Date.now())
@@ -229,6 +234,10 @@ export default function Dashboard() {
           <div className="summary-row">
             <span>Total Bills</span>
             <strong>{monthInvoices.length}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Total Customers</span>
+            <strong>{customerCount}</strong>
           </div>
           <div className="summary-row">
             <span>Outstanding (Udhaar)</span>
