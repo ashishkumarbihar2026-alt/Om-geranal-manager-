@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -20,7 +21,12 @@ function Protected({ children }) {
 }
 
 export default function App() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', profile?.theme || 'light')
+  }, [profile?.theme])
+
   return (
     <div className="app-shell">
       {user && <Sidebar />}

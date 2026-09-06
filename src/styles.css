@@ -15,6 +15,31 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
+[data-theme='dark'] {
+  --cream: #14172b;
+  --ink: #f0f0f5;
+  --ink-soft: #9a9dc0;
+  --border: #2a2e4d;
+}
+
+[data-theme='dark'] body {
+  background: var(--cream);
+}
+
+[data-theme='dark'] .card,
+[data-theme='dark'] .auth-card,
+[data-theme='dark'] .stat-card,
+[data-theme='dark'] .product-row,
+[data-theme='dark'] .sale-row,
+[data-theme='dark'] .customer-card,
+[data-theme='dark'] .sidebar,
+[data-theme='dark'] .bottom-nav,
+[data-theme='dark'] input {
+  background: #1e2140;
+  color: var(--ink);
+  border-color: var(--border);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -834,6 +859,31 @@ input:focus {
 }
 .profile-row:last-child {
   border-bottom: none;
+}
+
+.profile-info-card {
+  align-items: stretch;
+}
+
+.profile-info-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.profile-avatar-big {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--indigo);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
 }
 
 .logout-btn {
