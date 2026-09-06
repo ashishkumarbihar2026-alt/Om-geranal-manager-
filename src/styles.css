@@ -873,6 +873,27 @@ input:focus {
   font-size: 18px;
 }
 
+.nav-tab-prominent {
+  margin-top: -22px;
+}
+
+.nav-icon-fab {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 6px 14px rgba(0, 194, 168, 0.4);
+}
+
+.nav-tab-prominent.active .nav-icon-fab {
+  background: var(--navy);
+}
+
 /* ---------- Barcode scan overlay ---------- */
 .scan-overlay {
   position: fixed;
