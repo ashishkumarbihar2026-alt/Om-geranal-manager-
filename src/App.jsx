@@ -6,6 +6,8 @@ import Products from './pages/Products'
 import Sell from './pages/Sell'
 import Reports from './pages/Reports'
 import Customers from './pages/Customers'
+import Expenses from './pages/Expenses'
+import ProfitLoss from './pages/ProfitLoss'
 import Profile from './pages/Profile'
 import BottomNav from './components/BottomNav'
 import Sidebar from './components/Sidebar'
@@ -62,6 +64,22 @@ export default function App() {
             element={
               <Protected>
                 <Customers />
+              </Protected>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <Protected>
+                <Expenses />
+              </Protected>
+            }
+          />
+          <Route
+            path="/profit-loss"
+            element={
+              <Protected>
+                <ProfitLoss />
               </Protected>
             }
           />
