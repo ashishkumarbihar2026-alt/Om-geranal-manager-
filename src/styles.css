@@ -757,6 +757,22 @@ input:focus {
   gap: 10px;
 }
 
+.product-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.product-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  font-size: 18px;
+}
+
 .product-info {
   flex: 1;
   display: flex;
