@@ -7,6 +7,8 @@ const items = [
   { to: '/sell', label: 'Bills', icon: '🧾' },
   { to: '/customers', label: 'Customers', icon: '👥' },
   { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/expenses', label: 'Expenses', icon: '💸' },
+  { to: '/profit-loss', label: 'Profit & Loss', icon: '📉' },
   { to: '/profile', label: 'Profile', icon: '👤' },
 ]
 
