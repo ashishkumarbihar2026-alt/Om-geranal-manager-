@@ -17,7 +17,16 @@ export default function TopBar({ title, subtitle }) {
       </div>
       <div className="topbar-right">
         <span className="topbar-bell" title="Notifications">🔔</span>
-        <span className="topbar-avatar">{initials(profile?.name)}</span>
+        {profile?.photoURL ? (
+          <img
+            src={profile.photoURL}
+            alt="Profile"
+            className="topbar-avatar"
+            style={{ objectFit: 'cover' }}
+          />
+        ) : (
+          <span className="topbar-avatar">{initials(profile?.name)}</span>
+        )}
       </div>
     </header>
   )
