@@ -51,7 +51,7 @@ export default function ProfitLoss() {
 
   return (
     <div className="page">
-      <TopBar title="Profit & Loss" subtitle="Sale ka profit minus kharcha" />
+      <TopBar title="Profit & Loss" subtitle="Sales profit minus expenses" />
 
       <div className="range-tabs">
         {['today', 'week', 'month'].map((k) => (
@@ -60,14 +60,14 @@ export default function ProfitLoss() {
             className={rangeKind === k ? 'active' : ''}
             onClick={() => setRangeKind(k)}
           >
-            {k === 'today' ? 'Aaj' : k === 'week' ? 'Hafta' : 'Mahina'}
+            {k === 'today' ? 'Today' : k === 'week' ? 'Week' : 'Month'}
           </button>
         ))}
       </div>
 
       <div className="card">
         <div className="summary-row">
-          <span>Gross Profit (sales se)</span>
+          <span>Gross Profit (from sales)</span>
           <strong>₹{grossProfit.toFixed(0)}</strong>
         </div>
         <div className="summary-row">
@@ -84,9 +84,9 @@ export default function ProfitLoss() {
         </div>
       </div>
 
-      <h3 className="section-title">Expenses is period mein</h3>
+      <h3 className="section-title">Expenses in this period</h3>
       <div className="list">
-        {filteredExpenses.length === 0 && <p className="empty-state">Koi expense nahi hai</p>}
+        {filteredExpenses.length === 0 && <p className="empty-state">No expenses</p>}
         {filteredExpenses.map((e) => (
           <div className="sale-row" key={e.id}>
             <div>
