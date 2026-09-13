@@ -11,7 +11,7 @@ function startOfDay(d) {
   return x.getTime()
 }
 
-// Purane (single-item) sale records ko bhi naye invoice jaisa treat karo
+// Treat older (single-item) sale records the same as new invoice format
 function normalize(inv) {
   if (Array.isArray(inv.items)) return inv
   return {
@@ -99,41 +99,41 @@ export default function Dashboard() {
 
   return (
     <div className="page">
-      <TopBar title={`Namaste, ${profile?.name?.split(' ')[0] || ''} 👋`} subtitle={profile?.shopName} />
+      <TopBar title={`Hello, ${profile?.name?.split(' ')[0] || ''} 👋`} subtitle={profile?.shopName} />
 
       <div className="stat-grid stat-grid-4">
         <div className="stat-card">
           <div className="stat-card-top">
             <span className="stat-icon icon-blue">📊</span>
           </div>
-          <span className="stat-label">Aaj ki Bikri</span>
+          <span className="stat-label">Today's Sales</span>
           <span className="stat-value">₹{todayTotal.toFixed(0)}</span>
           <span className={'stat-change' + (salesChange < 0 ? ' negative' : '')}>
-            {salesChange >= 0 ? '↑' : '↓'} {Math.abs(salesChange)}% vs kal
+            {salesChange >= 0 ? '↑' : '↓'} {Math.abs(salesChange)}% vs yesterday
           </span>
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
             <span className="stat-icon icon-green">📈</span>
           </div>
-          <span className="stat-label">Aaj ka Profit</span>
+          <span className="stat-label">Today's Profit</span>
           <span className="stat-value">₹{todayProfit.toFixed(0)}</span>
           <span className={'stat-change' + (profitChange < 0 ? ' negative' : '')}>
-            {profitChange >= 0 ? '↑' : '↓'} {Math.abs(profitChange)}% vs kal
+            {profitChange >= 0 ? '↑' : '↓'} {Math.abs(profitChange)}% vs yesterday
           </span>
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
             <span className="stat-icon icon-purple">📦</span>
           </div>
-          <span className="stat-label">Aaj Items Becha</span>
+          <span className="stat-label">Items Sold Today</span>
           <span className="stat-value">{todayItems}</span>
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
             <span className="stat-icon icon-orange">🧾</span>
           </div>
-          <span className="stat-label">Aaj Bills</span>
+          <span className="stat-label">Today's Bills</span>
           <span className="stat-value">{todayInvoices.length}</span>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function Dashboard() {
       <div className="dash-grid">
         <div className="card chart-card">
           <h3 className="section-title" style={{ margin: '0 0 12px' }}>
-            Sales Overview (7 din)
+            Sales Overview (7 days)
           </h3>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={chartData}>
@@ -163,7 +163,7 @@ export default function Dashboard() {
           <h3 className="section-title" style={{ margin: '0 0 12px' }}>
             Top Selling Products
           </h3>
-          {topProducts.length === 0 && <p className="empty-state">Abhi data nahi hai</p>}
+          {topProducts.length === 0 && <p className="empty-state">No data yet</p>}
           {topProducts.map((p) => (
             <div className="top-product-row" key={p.name}>
               <span>{p.name}</span>
@@ -177,7 +177,7 @@ export default function Dashboard() {
 
       <h3 className="section-title">Recent Bills</h3>
       <div className="list">
-        {invoices.length === 0 && <p className="empty-state">Abhi tak koi bill nahi bana</p>}
+        {invoices.length === 0 && <p className="empty-state">No bills created yet</p>}
         {invoices.slice(0, 20).map((inv) => (
           <div className="sale-row" key={inv.id}>
             <div>
