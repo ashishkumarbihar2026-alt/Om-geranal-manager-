@@ -49,7 +49,7 @@ export default function Customers() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Ye customer hata dein?')) return
+    if (!confirm('Delete this customer?')) return
     await deleteDoc(doc(db, 'users', user.uid, 'customers', id))
   }
 
@@ -70,25 +70,25 @@ export default function Customers() {
 
   return (
     <div className="page">
-      <TopBar title="Customers" subtitle="Grahak aur unka udhaar track karo" />
+      <TopBar title="Customers" subtitle="Track customers and their credit (udhaar)" />
 
       <form className="card form-card" onSubmit={handleAdd}>
         <label>
-          Customer ka naam
+          Customer Name
           <input value={name} onChange={(e) => setName(e.target.value)} required />
         </label>
         <label>
-          Phone number (optional)
+          Phone Number (optional)
           <input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
         </label>
         <button type="submit" className="btn-primary">
-          Customer Add Karo
+          Add Customer
         </button>
       </form>
 
       <div className="list">
         {customerStats.length === 0 && (
-          <p className="empty-state">Abhi koi customer add nahi hua</p>
+          <p className="empty-state">No customers added yet</p>
         )}
         {customerStats.map((c) => (
           <div className="customer-card" key={c.id}>
@@ -102,9 +102,9 @@ export default function Customers() {
               </button>
             </div>
             <div className="customer-amounts">
-              <span>Total Kharida: ₹{c.totalBusiness.toFixed(0)}</span>
+              <span>Total Purchased: ₹{c.totalBusiness.toFixed(0)}</span>
               <span className={c.totalDue > 0 ? 'customer-due' : 'customer-clear'}>
-                Udhaar: ₹{c.totalDue.toFixed(0)}
+                Due (Udhaar): ₹{c.totalDue.toFixed(0)}
               </span>
             </div>
             {c.bills.length > 0 && (
@@ -112,7 +112,7 @@ export default function Customers() {
                 className="btn-secondary btn-small"
                 onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
               >
-                {expandedId === c.id ? 'Bills chupao' : `Bills dekho (${c.bills.length})`}
+                {expandedId === c.id ? 'Hide Bills' : `View Bills (${c.bills.length})`}
               </button>
             )}
             {expandedId === c.id && (
