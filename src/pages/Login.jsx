@@ -18,7 +18,7 @@ export default function Login() {
     setError('')
 
     if (mode === 'signup' && setupCode !== SETUP_CODE) {
-      setError('Setup code galat hai')
+      setError('Incorrect setup code')
       return
     }
 
@@ -43,7 +43,7 @@ export default function Login() {
           <i></i><i></i><i></i><i></i><i></i>
         </span>
         <h1>Dukan Scan</h1>
-        <p>Apni dukan ka pura hisaab, ek jagah</p>
+        <p>Your complete shop accounting, in one place</p>
       </div>
 
       <form className="auth-card" onSubmit={handleSubmit}>
@@ -60,18 +60,18 @@ export default function Login() {
             className={mode === 'signup' ? 'active' : ''}
             onClick={() => setMode('signup')}
           >
-            Naya Account
+            New Account
           </button>
         </div>
 
         {mode === 'signup' && (
           <>
             <label>
-              Aapka naam
+              Your Name
               <input value={name} onChange={(e) => setName(e.target.value)} required />
             </label>
             <label>
-              Dukan ka naam
+              Shop Name
               <input value={shopName} onChange={(e) => setShopName(e.target.value)} required />
             </label>
             <label>
@@ -80,7 +80,7 @@ export default function Login() {
                 type="password"
                 value={setupCode}
                 onChange={(e) => setSetupCode(e.target.value)}
-                placeholder="Sirf tumhe pata code"
+                placeholder="Only you know this code"
                 required
               />
             </label>
@@ -110,7 +110,7 @@ export default function Login() {
         {error && <p className="form-error">{error}</p>}
 
         <button type="submit" className="btn-primary" disabled={busy}>
-          {busy ? 'Ruko…' : mode === 'login' ? 'Login Karo' : 'Account Banao'}
+          {busy ? 'Please wait…' : mode === 'login' ? 'Login' : 'Create Account'}
         </button>
       </form>
     </div>
@@ -119,12 +119,12 @@ export default function Login() {
 
 function friendlyError(code) {
   const map = {
-    'auth/invalid-email': 'Email sahi format mein nahi hai',
-    'auth/user-not-found': 'Ye email register nahi hai',
-    'auth/wrong-password': 'Password galat hai',
-    'auth/invalid-credential': 'Email ya password galat hai',
-    'auth/email-already-in-use': 'Ye email pehle se registered hai',
-    'auth/weak-password': 'Password kam se kam 6 characters ka rakho',
+    'auth/invalid-email': 'Email is not in a valid format',
+    'auth/user-not-found': 'This email is not registered',
+    'auth/wrong-password': 'Incorrect password',
+    'auth/invalid-credential': 'Incorrect email or password',
+    'auth/email-already-in-use': 'This email is already registered',
+    'auth/weak-password': 'Password must be at least 6 characters',
   }
-  return map[code] || 'Kuch galat ho gaya, dobara try karo'
-}
+  return map[code] || 'Something went wrong, please try again'
+                }
