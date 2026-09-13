@@ -15,7 +15,7 @@ import Sidebar from './components/Sidebar'
 
 function Protected({ children }) {
   const { user, loading } = useAuth()
-  if (loading) return <div className="screen-loading">Load ho raha hai…</div>
+  if (loading) return <div className="screen-loading">Loading…</div>
   if (!user) return <Navigate to="/login" replace />
   return children
 }
