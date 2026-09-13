@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+ import { useEffect, useRef } from 'react'
 import JsBarcode from 'jsbarcode'
 
 export default function PrintBarcodeLabel({ product, onDone }) {
@@ -33,10 +33,10 @@ export default function PrintBarcodeLabel({ product, onDone }) {
         <p className="print-modal-mrp">MRP ₹{product.mrp}</p>
         <div className="btn-row">
           <button className="btn-secondary" onClick={onDone}>
-            Band Karo
+            Close
           </button>
           <button className="btn-primary" onClick={handlePrint}>
-            🖨️ Print Karo
+            🖨️ Print
           </button>
         </div>
       </div>
