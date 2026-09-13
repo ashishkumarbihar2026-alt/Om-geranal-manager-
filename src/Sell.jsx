@@ -107,7 +107,7 @@ export default function Sell() {
       }
       requestAnimationFrame(loop)
     } catch (err) {
-      alert('Camera access nahi mil paya. Product naam se search kar lo.')
+      alert('Could not access camera. Please search by product name.')
       setScanning(false)
     }
   }
@@ -118,7 +118,7 @@ export default function Sell() {
     if (match) {
       addToCart(match)
     } else {
-      setScanMsg('Ye barcode kisi product se match nahi hua. Naam se search kar lo.')
+      setScanMsg('This barcode did not match any product. Try searching by name.')
     }
   }
 
@@ -172,16 +172,16 @@ export default function Sell() {
 
   return (
     <div className="page">
-      <TopBar title="Billing" subtitle="Bill banao, print karo" />
+      <TopBar title="Billing" subtitle="Create and print bills" />
 
       <div className="card">
         <label>
-          Product dhoondo ya scan karo
+          Find or scan a product
           <div className="barcode-input-row">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Product ka naam type karo"
+              placeholder="Type product name"
             />
             {scanSupported && (
               <button type="button" className="btn-scan" onClick={startScan}>
@@ -208,9 +208,9 @@ export default function Sell() {
       {scanning && (
         <div className="scan-overlay">
           <video ref={videoRef} className="scan-video" muted playsInline />
-          <p>Barcode ko camera ke saamne rakho</p>
+          <p>Hold the barcode in front of the camera</p>
           <button className="btn-secondary" onClick={stopScan}>
-            Band Karo
+            Close
           </button>
         </div>
       )}
@@ -218,7 +218,7 @@ export default function Sell() {
       {cart.length > 0 && (
         <div className="card cart-card">
           <h3 className="section-title" style={{ margin: 0 }}>
-            Bill ke items
+            Bill Items
           </h3>
           {cart.map((item) => (
             <div className="cart-row" key={item.productId}>
@@ -255,14 +255,14 @@ export default function Sell() {
           </div>
 
           <button className="btn-primary" onClick={handleCheckout}>
-            Bill Confirm Karo
+            Confirm Bill
           </button>
         </div>
       )}
 
       {lastInvoice && (
         <div className="card sale-done-card">
-          <p>✅ Bill ban gaya — {lastInvoice.invoiceNo} (profit ₹{lastInvoice.profit.toFixed(0)})</p>
+          <p>✅ Bill created — {lastInvoice.invoiceNo} (profit ₹{lastInvoice.profit.toFixed(0)})</p>
           <PrintInvoice invoice={lastInvoice} shopName={profile?.shopName} printerWidth={profile?.printerWidth || '80'} />
         </div>
       )}
