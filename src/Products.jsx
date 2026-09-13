@@ -89,7 +89,7 @@ export default function Products() {
       }
       requestAnimationFrame(loop)
     } catch (err) {
-      alert('Camera access nahi mil paya. Barcode manually likh do.')
+      alert('Could not access camera. Please type the barcode manually.')
       setScanning(false)
     }
   }
@@ -123,7 +123,7 @@ export default function Products() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Ye product hata dein?')) return
+    if (!confirm('Delete this product?')) return
     await deleteDoc(doc(db, 'users', user.uid, 'products', id))
   }
 
@@ -200,7 +200,7 @@ export default function Products() {
 
   // ---------- CSV export ----------
   function exportCsv() {
-    const header = 'Name,Category,Dukan Price,MRP,Stock,Barcode\n'
+    const header = 'Name,Category,Shop Price,MRP,Stock,Barcode\n'
     const rows = products
       .map((p) => `"${p.name}","${p.category || ''}",${p.shopPrice},${p.mrp},${p.stock ?? 0},${p.barcode}`)
       .join('\n')
@@ -226,7 +226,7 @@ export default function Products() {
 
   return (
     <div className="page">
-      <TopBar title="Products" subtitle="Apni dukan ka inventory manage karo" />
+      <TopBar title="Products" subtitle="Manage your shop's inventory" />
 
       <div className="stat-grid stat-grid-4" style={{ marginBottom: 16 }}>
         <div className="stat-card">
@@ -246,7 +246,7 @@ export default function Products() {
           </div>
           <span className="stat-label">Low Stock</span>
           <span className="stat-value">{lowStockCount}</span>
-          <span className="stat-change">{lowStockOnly ? 'Filter ON — dubara dabao' : 'Dekhne ke liye dabao'}</span>
+          <span className="stat-change">{lowStockOnly ? 'Filter ON — tap again' : 'Tap to view'}</span>
         </div>
         <div className="stat-card">
           <div className="stat-card-top">
@@ -289,13 +289,13 @@ export default function Products() {
       {!bulkMode && (
         <form className="card form-card" onSubmit={handleAdd}>
           <label>
-            Product ka naam
+            Product Name
             <input value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
 
           <div className="price-row">
             <label>
-              Dukan Price (₹)
+              Shop Price (₹)
               <input
                 type="number"
                 inputMode="decimal"
@@ -318,7 +318,7 @@ export default function Products() {
 
           <div className="price-row">
             <label>
-              Shuru ka Stock (quantity)
+              Starting Stock (quantity)
               <input
                 type="number"
                 inputMode="numeric"
@@ -332,13 +332,13 @@ export default function Products() {
               <input
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                placeholder="Jaise: Snacks, Drinks"
+                placeholder="e.g. Snacks, Drinks"
               />
             </label>
           </div>
 
           <label>
-            Photo ka link (optional)
+            Photo Link (optional)
             <input
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
@@ -347,12 +347,12 @@ export default function Products() {
           </label>
 
           <label>
-            Barcode (khali chodo to auto-generate ho jayega)
+            Barcode (leave blank to auto-generate)
             <div className="barcode-input-row">
               <input
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                placeholder="Scan karo ya type karo"
+                placeholder="Scan or type"
               />
               {scanSupported && (
                 <button type="button" className="btn-scan" onClick={startScan}>
@@ -363,7 +363,7 @@ export default function Products() {
           </label>
 
           <button type="submit" className="btn-primary">
-            Product Add Karo
+            Add Product
           </button>
         </form>
       )}
@@ -371,9 +371,9 @@ export default function Products() {
       {scanning && (
         <div className="scan-overlay">
           <video ref={videoRef} className="scan-video" muted playsInline />
-          <p>Barcode ko camera ke saamne rakho</p>
+          <p>Hold the barcode in front of the camera</p>
           <button className="btn-secondary" onClick={stopScan}>
-            Band Karo
+            Close
           </button>
         </div>
       )}
@@ -383,14 +383,14 @@ export default function Products() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Product search karo..."
+            placeholder="Search products..."
           />
         </div>
       )}
 
       <div className="list">
         {filteredProducts.length === 0 && (
-          <p className="empty-state">Koi product nahi mila</p>
+          <p className="empty-state">No products found</p>
         )}
 
         {filteredProducts.map((p) =>
@@ -401,7 +401,7 @@ export default function Products() {
               </div>
               <div className="bulk-fields">
                 <label>
-                  Dukan
+                  Shop
                   <input
                     type="number"
                     value={bulkEdits[p.id]?.shopPrice ?? ''}
@@ -434,7 +434,7 @@ export default function Products() {
               />
               <div className="bulk-fields">
                 <label>
-                  Dukan
+                  Shop
                   <input
                     type="number"
                     value={editValues.shopPrice}
@@ -487,19 +487,19 @@ export default function Products() {
                 <span className="price-mrp">MRP ₹{p.mrp}</span>
               </div>
               <div className="product-actions">
-                <button className="btn-icon" title="Edit karo" onClick={() => startEdit(p)}>
+                <button className="btn-icon" title="Edit" onClick={() => startEdit(p)}>
                   ✏️
                 </button>
                 <button
                   className="btn-icon"
-                  title="Stock adjust karo"
+                  title="Adjust stock"
                   onClick={() => setAdjustingId(adjustingId === p.id ? null : p.id)}
                 >
                   ±
                 </button>
                 <button
                   className="btn-icon"
-                  title="Barcode print karo"
+                  title="Print barcode"
                   onClick={() => setPrintProduct(p)}
                 >
                   🖨️
@@ -513,7 +513,7 @@ export default function Products() {
                 <div className="adjust-panel">
                   <input
                     type="number"
-                    placeholder="+5 ya -5"
+                    placeholder="+5 or -5"
                     value={adjustQty}
                     onChange={(e) => setAdjustQty(e.target.value)}
                   />
@@ -538,4 +538,4 @@ export default function Products() {
       )}
     </div>
   )
-}
+                                         }
