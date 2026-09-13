@@ -39,7 +39,7 @@ export default function Expenses() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Ye expense hata dein?')) return
+    if (!confirm('Delete this expense?')) return
     await deleteDoc(doc(db, 'users', user.uid, 'expenses', id))
   }
 
@@ -49,18 +49,18 @@ export default function Expenses() {
 
   return (
     <div className="page">
-      <TopBar title="Expenses" subtitle="Dukan ka kharcha track karo" />
+      <TopBar title="Expenses" subtitle="Track your shop's expenses" />
 
       <div className="stat-grid" style={{ marginBottom: 16 }}>
         <div className="stat-card stat-primary" style={{ gridColumn: 'span 2' }}>
-          <span className="stat-label">Is Mahine ka Kharcha</span>
+          <span className="stat-label">This Month's Expenses</span>
           <span className="stat-value">₹{monthTotal.toFixed(0)}</span>
         </div>
       </div>
 
       <form className="card form-card" onSubmit={handleAdd}>
         <label>
-          Kis cheez ka kharcha (jaise: Rent, Bijli, Transport)
+          What was the expense for (e.g. Rent, Electricity, Transport)
           <input value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label>
@@ -74,13 +74,13 @@ export default function Expenses() {
           />
         </label>
         <button type="submit" className="btn-primary">
-          Expense Add Karo
+          Add Expense
         </button>
       </form>
 
-      <h3 className="section-title">Saare Expenses</h3>
+      <h3 className="section-title">All Expenses</h3>
       <div className="list">
-        {expenses.length === 0 && <p className="empty-state">Abhi koi expense add nahi hua</p>}
+        {expenses.length === 0 && <p className="empty-state">No expenses added yet</p>}
         {expenses.map((e) => (
           <div className="sale-row" key={e.id}>
             <div>
