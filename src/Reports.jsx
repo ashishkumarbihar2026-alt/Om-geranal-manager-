@@ -95,7 +95,7 @@ export default function Reports() {
 
   return (
     <div className="page">
-      <TopBar title="Reports" subtitle="Business performance track karo" />
+      <TopBar title="Reports" subtitle="Track your business performance" />
 
       <div className="range-tabs">
         {['today', 'week', 'month', 'custom'].map((k) => (
@@ -104,7 +104,7 @@ export default function Reports() {
             className={rangeKind === k ? 'active' : ''}
             onClick={() => setRangeKind(k)}
           >
-            {k === 'today' ? 'Aaj' : k === 'week' ? 'Hafta' : k === 'month' ? 'Mahina' : 'Custom'}
+            {k === 'today' ? 'Today' : k === 'week' ? 'Week' : k === 'month' ? 'Month' : 'Custom'}
           </button>
         ))}
       </div>
@@ -113,11 +113,11 @@ export default function Reports() {
         <div className="card">
           <div className="price-row">
             <label>
-              Se
+              From
               <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
             </label>
             <label>
-              Tak
+              To
               <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
             </label>
           </div>
@@ -126,7 +126,7 @@ export default function Reports() {
 
       <div className="stat-grid">
         <div className="stat-card stat-primary">
-          <span className="stat-label">Total Sale</span>
+          <span className="stat-label">Total Sales</span>
           <span className="stat-value">₹{totalSales.toFixed(0)}</span>
         </div>
         <div className="stat-card stat-profit">
@@ -134,7 +134,7 @@ export default function Reports() {
           <span className="stat-value">₹{totalProfit.toFixed(0)}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Bills / Items Becha</span>
+          <span className="stat-label">Bills / Items Sold</span>
           <span className="stat-value">
             {filtered.length} / {itemCount}
           </span>
@@ -142,16 +142,17 @@ export default function Reports() {
       </div>
 
       <button className="btn-primary gstr-btn" onClick={exportGSTRJson}>
-        📄 GSTR JSON Export Karo
+        📄 Export GSTR JSON
       </button>
       <p className="gstr-note">
-        Ye JSON CA ko dene ke liye hai — ye official GST portal format ka guaranteed-compliant
-        file nahi hai, bas structured data hai jisse GST return banana aasaan ho.
+        This JSON is meant to be shared with your accountant — it isn't a
+        guaranteed-compliant file for the official GST portal format, just structured data
+        to make filing your GST return easier.
       </p>
 
-      <h3 className="section-title">Bills is period mein</h3>
+      <h3 className="section-title">Bills in this period</h3>
       <div className="list">
-        {filtered.length === 0 && <p className="empty-state">Is period mein koi bill nahi hai</p>}
+        {filtered.length === 0 && <p className="empty-state">No bills in this period</p>}
         {filtered.map((inv) => (
           <div className="sale-row" key={inv.id}>
             <div>
