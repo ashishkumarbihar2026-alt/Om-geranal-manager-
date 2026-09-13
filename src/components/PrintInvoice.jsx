@@ -6,7 +6,7 @@ export default function PrintInvoice({ invoice, shopName, printerWidth = '80' })
   return (
     <>
       <button className="btn-primary" onClick={handlePrint}>
-        🖨️ Invoice Print Karo
+        🖨️ Print Invoice
       </button>
 
       <div className={'print-only-invoice printer-' + printerWidth}>
@@ -45,8 +45,8 @@ export default function PrintInvoice({ invoice, shopName, printerWidth = '80' })
         </table>
         <div className="invoice-divider" />
         <p className="invoice-total">Total: ₹{invoice.total.toFixed(0)}</p>
-        {invoice.due > 0 && <p className="invoice-total">Udhaar: ₹{invoice.due.toFixed(0)}</p>}
-        <p className="invoice-thanks">Dhanyavaad! Phir aaiyega</p>
+        {invoice.due > 0 && <p className="invoice-total">Due: ₹{invoice.due.toFixed(0)}</p>}
+        <p className="invoice-thanks">Thank you! Visit again</p>
       </div>
     </>
   )
